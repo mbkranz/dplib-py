@@ -15,7 +15,9 @@ def check_metadata(
         metadata = read_dict(metadata)
 
     # Get default profile
-    if type == "dialect":
+    if type == "catalog":
+        default_profile = settings.PROFILE_CURRENT_CATALOG
+    elif type == "dialect":
         default_profile = settings.PROFILE_DEFAULT_DIALECT
     elif type == "package":
         default_profile = settings.PROFILE_DEFAULT_PACKAGE

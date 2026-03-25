@@ -38,10 +38,10 @@ def read_profile(*, profile: str) -> types.IDict:
     if parts:
         version, filename = parts
         profile = os.path.join(settings.PROFILE_BASEDIR, version, filename)
-
-    # Ensure profile is URL
-    if not is_http_or_ftp_protocol_path(profile):
-        raise Error(f'Profile MUST be a URL: "{profile}"')
+    else:
+        # Ensure profile is URL
+        if not is_http_or_ftp_protocol_path(profile):
+            raise Error(f'Profile MUST be a URL: "{profile}"')
 
     # Read jsonSchema
     try:
@@ -61,7 +61,10 @@ def read_profile(*, profile: str) -> types.IDict:
 
 
 def parse_profile(profile: str):
-    parts = profile.rsplit("/", 3)
+    # Split into [base_url, version, filename] by splitting only the last 2 "/"
+    # e.g. "https://datapackage.org/profiles/2.0/datapackage.json"
+    #   -> ["https://datapackage.org/profiles", "2.0", "datapackage.json"]
+    parts = profile.rsplit("/", 2)
 
     # Ensure builtin copy exists
     if len(parts) != 3:

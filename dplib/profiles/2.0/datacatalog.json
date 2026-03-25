@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Data Catalog",
+  "description": "A collection of Data Packages",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "title": "Profile",
+      "description": "The profile of this descriptor."
+    },
+    "name": {
+      "type": "string",
+      "title": "Name",
+      "description": "An identifier string. Lower-case and contain only alphanumeric characters along with \".\", \"_\" or \"-\" characters."
+    },
+    "title": {
+      "type": "string",
+      "title": "Title",
+      "description": "A human-readable title for this catalog."
+    },
+    "description": {
+      "type": "string",
+      "title": "Description",
+      "description": "A description of the catalog."
+    },
+    "packages": {
+      "type": "array",
+      "title": "Packages",
+      "description": "A list of Data Packages.",
+      "items": {
+        "type": "object"
+      }
+    }
+  },
+  "additionalProperties": true
+}

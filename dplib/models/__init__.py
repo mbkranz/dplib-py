@@ -1,3 +1,4 @@
+from .catalog import *
 from .contributor import Contributor as Contributor
 from .dialect import *
 from .field import *
