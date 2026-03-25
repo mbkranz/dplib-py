@@ -1,0 +1,13 @@
+{
+  "packages": [
+    {
+      "name": "name",
+      "resources": [
+        {
+          "name": "name",
+          "path": "table.csv"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "name",
+  "title": "title",
+  "description": "description",
+  "packages": [
+    {
+      "name": "first",
+      "resources": [
+        {
+          "name": "resource1",
+          "path": "table.csv"
+        }
+      ]
+    },
+    {
+      "name": "second",
+      "resources": [
+        {
+          "name": "resource2",
+          "path": "table.csv"
+        }
+      ]
+    }
+  ]
+}

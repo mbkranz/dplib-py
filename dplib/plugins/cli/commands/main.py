@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from ..options.system import Debug
 from ..program import Program
-from . import dialect, package, resource, schema
+from . import catalog, dialect, package, resource, schema
 
 program = Program()
+program.add_typer(catalog.program)
 program.add_typer(dialect.program)
 program.add_typer(resource.program)
 program.add_typer(package.program)
