@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -9,7 +8,7 @@ import fsspec  # type: ignore
 from ..error import Error
 
 
-def infer_format(path: str, *, raise_missing: bool = False):
+def infer_format(path: Path, *, raise_missing: bool = False):
     format = Path(path).suffix[1:]
     if format == "yml":
         format = "yaml"
@@ -20,47 +19,47 @@ def infer_format(path: str, *, raise_missing: bool = False):
     return format
 
 
-def infer_basepath(path: str):
-    basepath = os.path.dirname(path)
-    if basepath and is_file_protocol_path(basepath):
-        if not os.path.abspath(basepath):
-            basepath = os.path.relpath(basepath, start=os.getcwd())
+def infer_basepath(path: Path) -> str:
+    basepath = str(Path(path).parent)
+    if is_file_protocol_path(path):
+        if not Path(basepath).is_absolute():
+            basepath = str(Path(path).resolve().parent)
     return basepath
 
 
-def ensure_basepath(path: str, basepath: Optional[str] = None) -> Tuple[str, str]:
+def ensure_basepath(path: Path, basepath: Optional[Path] ) -> Tuple[str, str]:
     if basepath:
-        path = join_basepath(path, basepath)
+        path = Path(join_basepath(path, basepath))
     else:
-        basepath = infer_basepath(path)
-    return path, basepath
+        basepath = Path(infer_basepath(path))
+    return str(path), str(basepath)
 
 
-def join_basepath(path: str, basepath: Optional[str] = None) -> str:
+def join_basepath(path:  Path, basepath: Optional[Path] = None) -> str:
     if not basepath:
-        return path
+        return str(path)
     if not is_file_protocol_path(path):
-        return path
+        return str(path)
     if not is_file_protocol_path(basepath):
         return f"{basepath}/{path}"
-    return os.path.join(basepath, path)
+    return str(Path(basepath) / path)
 
 
-def is_file_protocol_path(path: str) -> bool:
+def is_file_protocol_path(path: Path) -> bool:
     info = fsspec.utils.infer_storage_options(path)  # type: ignore
     return info.get("protocol") == "file"  # type: ignore
 
 
-def is_http_or_ftp_protocol_path(path: str) -> bool:
+def is_http_or_ftp_protocol_path(path: Path) -> bool:
     info = fsspec.utils.infer_storage_options(path)  # type: ignore
     return info.get("protocol") in ["http", "https", "ftp", "ftps"]  # type: ignore
 
 
-def assert_safe_path(path: str, *, basepath: Optional[str] = None):
+def assert_safe_path(path: Path, *, basepath: Optional[str] = None):
     """Assert that the path (untrusted) is not outside the basepath (trusted)"""
     if is_file_protocol_path(path):
         try:
-            root = Path(basepath or os.getcwd()).resolve()
+            root = (Path(basepath) if basepath else Path.cwd()).resolve()
             item = root.joinpath(path).resolve()
             item.relative_to(root)
         except Exception:
