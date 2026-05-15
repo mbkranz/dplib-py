@@ -26,6 +26,96 @@ class Model(BaseModel, extra="allow", validate_assignment=True):
         assert self.model_extra is not None
         return self.model_extra
 
+    def entity_children(self) -> list["Model"]:
+        """Return named child entities reachable by dot notation.
+
+        By convention, Data Package-style containment is expressed through the
+        ``resources``, ``packages``, and ``catalogs`` collections. Any subclass
+        exposing one or more of those attributes inherits dot-notation entity
+        traversal automatically.
+        """
+        children: list[Model] = []
+        for field_name in ("resources", "packages", "catalogs"):
+            value = getattr(self, field_name, None)
+            if isinstance(value, list):
+                children.extend(item for item in value if isinstance(item, Model))
+            elif isinstance(value, Model):
+                children.append(value)
+        return children
+
+    def iter_entity_references(
+        self,
+        *,
+        include_self: bool = False,
+        parent_path: Optional[str] = None,
+    ) -> list[tuple[str, "Model"]]:
+        """Return child entity selector paths reachable from this model.
+
+        Parameters:
+            include_self: Include the current model in the results when it has a
+                non-empty ``name``.
+            parent_path: Existing selector prefix to prepend to this model and
+                all descendants.
+        """
+        references: list[tuple[str, Model]] = []
+        current_parent = parent_path
+
+        current_name = getattr(self, "name", None)
+        if include_self and isinstance(current_name, str) and current_name.strip():
+            selector_path = (
+                current_name if parent_path is None else f"{parent_path}.{current_name}"
+            )
+            references.append((selector_path, self))
+            current_parent = selector_path
+
+        for child in self.entity_children():
+            child_name = getattr(child, "name", None)
+            if not isinstance(child_name, str) or not child_name.strip():
+                continue
+
+            selector_path = (
+                child_name if current_parent is None else f"{current_parent}.{child_name}"
+            )
+            references.append((selector_path, child))
+            references.extend(child.iter_entity_references(parent_path=selector_path))
+
+        return references
+
+    def get_entity(self, full_name: str) -> Optional["Model"]:
+        """Get a named entity reachable from this model using dot notation.
+
+        The selector may start from the current model's own ``name`` or from
+        one of its direct children. For example, if a package is named
+        ``sales-dataset``, both ``sales-table`` and
+        ``sales-dataset.sales-table`` resolve to the same resource when called
+        on that package.
+        """
+        normalized_name = full_name.strip()
+        if not normalized_name:
+            return None
+
+        self_name = getattr(self, "name", None)
+        if isinstance(self_name, str) and self_name.strip():
+            if normalized_name == self_name:
+                return self
+
+            prefix = f"{self_name}."
+            if normalized_name.startswith(prefix):
+                normalized_name = normalized_name[len(prefix):]
+
+        current_part, separator, remainder = normalized_name.partition(".")
+        for child in self.entity_children():
+            child_name = getattr(child, "name", None)
+            if child_name != current_part:
+                continue
+
+            if not separator:
+                return child
+
+            return child.get_entity(remainder)
+
+        return None
+
     # Converters
 
     def to_path(self, path: str, *, format: Optional[str] = None):

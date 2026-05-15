@@ -6,7 +6,7 @@ import yaml
 
 from dplib import settings
 from dplib.error import Error
-from dplib.models import Resource
+from dplib.models import Catalog, Package, Resource
 
 
 def test_model_repr():
@@ -78,3 +78,36 @@ def test_model_to_path_yaml(tmp_path: Path):
             "name": "name",
             "path": "table.csv",
         }
+
+
+def test_model_get_entity_from_package_supports_relative_and_prefixed_paths():
+    resource = Resource(name="sales-table", path="sales.csv")
+    package = Package(name="sales-dataset", resources=[resource])
+
+    assert package.get_entity("sales-table") is resource
+    assert package.get_entity("sales-dataset.sales-table") is resource
+
+
+def test_model_get_entity_from_catalog_traverses_nested_catalogs_and_packages():
+    resource = Resource(name="sales-table", path="sales.csv")
+    package = Package(name="sales-dataset", resources=[resource])
+    archive_resource = Resource(name="notes", path="notes.md")
+    archive = Catalog(name="archive", resources=[archive_resource])
+    catalog = Catalog(name="warehouse", packages=[package], catalogs=[archive])
+
+    assert catalog.get_entity("sales-dataset.sales-table") is resource
+    assert catalog.get_entity("warehouse.sales-dataset.sales-table") is resource
+    assert catalog.get_entity("archive.notes") is archive_resource
+    assert archive.get_entity("archive.notes") is archive_resource
+
+
+def test_model_iter_entity_references_uses_any_named_parent_path():
+    resource = Resource(name="sales-table", path="sales.csv")
+    package = Package(name="sales-dataset", resources=[resource])
+    catalog = Catalog(name="warehouse", packages=[package])
+
+    references = dict(catalog.iter_entity_references(include_self=True))
+
+    assert references["warehouse"] is catalog
+    assert references["warehouse.sales-dataset"] is package
+    assert references["warehouse.sales-dataset.sales-table"] is resource
