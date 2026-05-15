@@ -123,6 +123,7 @@ nav:
       - Contributing: contributing.md
       - Changelog: changelog.md
   - Models:
+      - Catalog: models/catalog.md
       - Package: models/package.md
       - Resource: models/resource.md
       - Dialect: models/dialect.md
