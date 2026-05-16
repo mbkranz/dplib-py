@@ -1,0 +1,5 @@
+{
+  "name": "name",
+  "packages": [{"path": "package-full.json"}],
+  "catalogs": [{"path": "sub-catalog.json"}]
+}

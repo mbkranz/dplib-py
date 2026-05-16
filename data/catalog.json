@@ -1,0 +1,17 @@
+{
+  "name": "name",
+  "title": "title",
+  "packages": [
+    {
+      "name": "name",
+      "resources": [
+        {
+          "name": "name",
+          "path": "table.csv",
+          "dialect": "dialect.json",
+          "schema": "schema.json"
+        }
+      ]
+    }
+  ]
+}
