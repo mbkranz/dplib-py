@@ -81,29 +81,45 @@ class Catalog(Model):
             if isinstance(pkg, Package) and pkg.name == name:
                 return pkg
         reference = self.get_entity_reference(name)
-        if reference is None:
-            raise ValueError(f"Package with name '{name}' not found in packages: {[p.name for p in self.packages]}")
-        if not isinstance(reference.model, Package):
-            raise ValueError(
-                f"Entity with name '{name}' was found but is of type '{reference.entity_type}', expected 'package'"
-            )
-        return reference.model
-        
+        if reference is not None:
+            if not isinstance(reference.model, Package):
+                raise ValueError(
+                    f"Entity with name '{name}' was found but is of type '{reference.entity_type}', expected 'package'"
+                )
+            return reference.model
+        catalog_subclass = self.__class__
+        for cat in self.catalogs:
+            if cat.name is None and cat.path is not None:
+                assert_safe_path(cat.path, basepath=cat.basepath)
+                loaded_cat = catalog_subclass.from_path(cat.path, basepath=cat.basepath)
+                ref = loaded_cat.get_entity_reference(name)
+                if ref is not None and isinstance(ref.model, Package):
+                    return ref.model
+        raise ValueError(f"Package with name '{name}' not found in packages: {[p.name for p in self.packages]}")
+
     def get_resource(self, name: str) -> Optional["Resource"]:
         """Get resource by name"""
         for res in self.resources:
             if isinstance(res, Resource) and res.name == name:
                 return res
         reference = self.get_entity_reference(name)
-        if reference is None:
-            raise ValueError(f"Resource with name '{name}' not found in resources: {[r.name for r in self.resources]}")
-        if not isinstance(reference.model, Resource):
-            raise ValueError(
-                f"Entity with name '{name}' was found but is of type '{reference.entity_type}', expected 'resource'"
-            )
-        return reference.model
+        if reference is not None:
+            if not isinstance(reference.model, Resource):
+                raise ValueError(
+                    f"Entity with name '{name}' was found but is of type '{reference.entity_type}', expected 'resource'"
+                )
+            return reference.model
+        catalog_subclass = self.__class__
+        for cat in self.catalogs:
+            if cat.name is None and cat.path is not None:
+                assert_safe_path(cat.path, basepath=cat.basepath)
+                loaded_cat = catalog_subclass.from_path(cat.path, basepath=cat.basepath)
+                ref = loaded_cat.get_entity_reference(name)
+                if ref is not None and isinstance(ref.model, Resource):
+                    return ref.model
+        raise ValueError(f"Resource with name '{name}' not found in resources: {[r.name for r in self.resources]}")
     
-    def get_catalog(self, name: str,default=None) -> Optional["Catalog"]:
+    def get_catalog(self, name: str, default=None) -> Optional["Catalog"]:
         """Get catalog by name"""
         catalog_subclass = self.__class__
         for cat in self.catalogs:
