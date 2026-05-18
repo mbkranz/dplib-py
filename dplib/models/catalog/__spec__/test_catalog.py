@@ -1,4 +1,6 @@
-from dplib.models import Catalog, Dialect, Package, Schema
+import pytest
+
+from dplib.models import Catalog, Dialect, Package, Resource, Schema
 
 
 def test_catalog_from_path():
@@ -59,3 +61,35 @@ def test_catalog_dereference_catalog_by_path():
     assert resource
     assert isinstance(resource.dialect, Dialect)
     assert isinstance(resource.schema, Schema)
+
+
+def test_catalog_getters_support_relative_entity_references():
+    catalog = Catalog(
+        name="warehouse",
+        packages=[Package(name="sales", resources=[Resource(name="table", path="table.csv")])],
+        catalogs=[
+            Catalog(
+                name="archive",
+                packages=[Package(name="sales", resources=[])],
+                catalogs=[Catalog(name="old")],
+            )
+        ],
+    )
+    assert catalog.get_package(name="archive.sales")
+    assert catalog.get_resource(name="sales.table")
+    assert catalog.get_catalog(name="archive.old")
+
+
+def test_catalog_getters_raise_for_wrong_entity_type():
+    catalog = Catalog(
+        name="warehouse",
+        packages=[Package(name="sales", resources=[Resource(name="table", path="table.csv")])],
+    )
+    with pytest.raises(ValueError, match="expected 'resource'"):
+        catalog.get_resource(name="sales")
+    with pytest.raises(ValueError, match="expected 'package'"):
+        catalog.get_package(name="sales.table")
+    with pytest.raises(ValueError, match="expected 'catalog'"):
+        catalog.get_catalog(name="sales")
+    with pytest.raises(ValueError, match="expected 'catalog'"):
+        catalog.get_catalog(name="sales.table")
