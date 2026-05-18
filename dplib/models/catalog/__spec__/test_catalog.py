@@ -67,11 +67,17 @@ def test_catalog_getters_support_relative_entity_references():
     catalog = Catalog(
         name="warehouse",
         packages=[Package(name="sales", resources=[Resource(name="table", path="table.csv")])],
-        catalogs=[Catalog(name="archive")],
+        catalogs=[
+            Catalog(
+                name="archive",
+                packages=[Package(name="sales", resources=[])],
+                catalogs=[Catalog(name="old")],
+            )
+        ],
     )
-    assert catalog.get_package(name="sales")
+    assert catalog.get_package(name="archive.sales")
     assert catalog.get_resource(name="sales.table")
-    assert catalog.get_catalog(name="archive")
+    assert catalog.get_catalog(name="archive.old")
 
 
 def test_catalog_getters_raise_for_wrong_entity_type():
