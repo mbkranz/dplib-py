@@ -80,14 +80,28 @@ class Catalog(Model):
         for pkg in self.packages:
             if isinstance(pkg, Package) and pkg.name == name:
                 return pkg
-        raise ValueError(f"Package with name '{name}' not found in packages: {[p.name for p in self.packages]}")
+        reference = self.get_entity_reference(name)
+        if reference is None:
+            raise ValueError(f"Package with name '{name}' not found in packages: {[p.name for p in self.packages]}")
+        if not isinstance(reference.model, Package):
+            raise ValueError(
+                f"Entity with name '{name}' was found but is of type '{reference.entity_type}', expected 'package'"
+            )
+        return reference.model
         
     def get_resource(self, name: str) -> Optional["Resource"]:
         """Get resource by name"""
         for res in self.resources:
             if isinstance(res, Resource) and res.name == name:
                 return res
-        raise ValueError(f"Resource with name '{name}' not found in resources: {[r.name for r in self.resources]}")
+        reference = self.get_entity_reference(name)
+        if reference is None:
+            raise ValueError(f"Resource with name '{name}' not found in resources: {[r.name for r in self.resources]}")
+        if not isinstance(reference.model, Resource):
+            raise ValueError(
+                f"Entity with name '{name}' was found but is of type '{reference.entity_type}', expected 'resource'"
+            )
+        return reference.model
     
     def get_catalog(self, name: str,default=None) -> Optional["Catalog"]:
         """Get catalog by name"""
@@ -103,8 +117,14 @@ class Catalog(Model):
                 loaded_cat = catalog_subclass.from_path(cat.path, basepath=cat.basepath)
                 if loaded_cat.name == name:
                     return loaded_cat
-        
-        raise ValueError(f"Catalog with name '{name}' not found in catalogs: {[c.name for c in self.catalogs]}")
+        reference = self.get_entity_reference(name)
+        if reference is None:
+            raise ValueError(f"Catalog with name '{name}' not found in catalogs: {[c.name for c in self.catalogs]}")
+        if not isinstance(reference.model, Catalog):
+            raise ValueError(
+                f"Entity with name '{name}' was found but is of type '{reference.entity_type}', expected 'catalog'"
+            )
+        return reference.model
     
     
     def dereference(self) -> "Catalog":

@@ -206,6 +206,13 @@ class Model(BaseModel, extra="allow", validate_assignment=True):
         ``sales-dataset.sales-table`` resolve to the same resource when called
         on that package.
         """
+        reference = self.get_entity_reference(full_name)
+        if reference is None:
+            return None
+        return reference.model
+
+    def get_entity_reference(self, full_name: str) -> Optional[EntityReference]:
+        """Get an entity reference reachable from this model using dot notation."""
         normalized_name = full_name.strip()
         if not normalized_name:
             return None
@@ -216,12 +223,12 @@ class Model(BaseModel, extra="allow", validate_assignment=True):
         ]
         for reference in references:
             if reference.name_path == normalized_name:
-                return reference.model
+                return reference
 
         if "." not in normalized_name:
             for reference in references:
                 if reference.name_path.split(".")[-1] == normalized_name:
-                    return reference.model
+                    return reference
 
         return None
 

@@ -1,4 +1,4 @@
-from dplib.models import Catalog, Dialect, Package, Schema
+from dplib.models import Catalog, Dialect, Package, Resource, Schema
 
 
 def test_catalog_from_path():
@@ -59,3 +59,26 @@ def test_catalog_dereference_catalog_by_path():
     assert resource
     assert isinstance(resource.dialect, Dialect)
     assert isinstance(resource.schema, Schema)
+
+
+def test_catalog_getters_support_relative_entity_references():
+    catalog = Catalog(
+        name="warehouse",
+        packages=[Package(name="sales", resources=[Resource(name="table", path="table.csv")])],
+        catalogs=[Catalog(name="archive")],
+    )
+    assert catalog.get_package(name="sales")
+    assert catalog.get_resource(name="sales.table")
+    assert catalog.get_catalog(name="archive")
+
+
+def test_catalog_getters_raise_for_wrong_entity_type():
+    catalog = Catalog(
+        name="warehouse",
+        packages=[Package(name="sales", resources=[])],
+    )
+    try:
+        catalog.get_resource(name="sales")
+        assert False
+    except ValueError as exc:
+        assert "expected 'resource'" in str(exc)
