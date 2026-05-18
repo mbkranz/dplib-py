@@ -75,10 +75,25 @@ def test_catalog_getters_support_relative_entity_references():
 def test_catalog_getters_raise_for_wrong_entity_type():
     catalog = Catalog(
         name="warehouse",
-        packages=[Package(name="sales", resources=[])],
+        packages=[Package(name="sales", resources=[Resource(name="table", path="table.csv")])],
     )
     try:
         catalog.get_resource(name="sales")
         assert False
     except ValueError as exc:
         assert "expected 'resource'" in str(exc)
+    try:
+        catalog.get_package(name="sales.table")
+        assert False
+    except ValueError as exc:
+        assert "expected 'package'" in str(exc)
+    try:
+        catalog.get_catalog(name="sales")
+        assert False
+    except ValueError as exc:
+        assert "expected 'catalog'" in str(exc)
+    try:
+        catalog.get_catalog(name="sales.table")
+        assert False
+    except ValueError as exc:
+        assert "expected 'catalog'" in str(exc)
