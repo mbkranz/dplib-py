@@ -1,3 +1,5 @@
+import pytest
+
 from dplib.models import Catalog, Dialect, Package, Resource, Schema
 
 
@@ -77,23 +79,11 @@ def test_catalog_getters_raise_for_wrong_entity_type():
         name="warehouse",
         packages=[Package(name="sales", resources=[Resource(name="table", path="table.csv")])],
     )
-    try:
+    with pytest.raises(ValueError, match="expected 'resource'"):
         catalog.get_resource(name="sales")
-        assert False
-    except ValueError as exc:
-        assert "expected 'resource'" in str(exc)
-    try:
+    with pytest.raises(ValueError, match="expected 'package'"):
         catalog.get_package(name="sales.table")
-        assert False
-    except ValueError as exc:
-        assert "expected 'package'" in str(exc)
-    try:
+    with pytest.raises(ValueError, match="expected 'catalog'"):
         catalog.get_catalog(name="sales")
-        assert False
-    except ValueError as exc:
-        assert "expected 'catalog'" in str(exc)
-    try:
+    with pytest.raises(ValueError, match="expected 'catalog'"):
         catalog.get_catalog(name="sales.table")
-        assert False
-    except ValueError as exc:
-        assert "expected 'catalog'" in str(exc)
