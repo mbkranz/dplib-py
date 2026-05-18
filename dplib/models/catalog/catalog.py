@@ -117,6 +117,10 @@ class Catalog(Model):
                 loaded_cat = catalog_subclass.from_path(cat.path, basepath=cat.basepath)
                 if loaded_cat.name == name:
                     return loaded_cat
+                if "." in name:
+                    ref = loaded_cat.get_entity_reference(name)
+                    if ref is not None and isinstance(ref.model, Catalog):
+                        return ref.model
         reference = self.get_entity_reference(name)
         if reference is None:
             raise ValueError(f"Catalog with name '{name}' not found in catalogs: {[c.name for c in self.catalogs]}")
